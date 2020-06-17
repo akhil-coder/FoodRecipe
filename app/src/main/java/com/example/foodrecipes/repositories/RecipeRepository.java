@@ -34,4 +34,8 @@ public class RecipeRepository {
     public LiveData<List<Recipe>> getRecipe(){
         return mRecipeApiClient.getRecipe();
     }
+
+    public void cancelRequest() {
+        mRecipeApiClient.cancelRequest();
+    }
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.foodrecipes.AppExecutors;
 import com.example.foodrecipes.models.Recipe;
 import com.example.foodrecipes.requests.response.RecipeSearchResponse;
+import com.example.foodrecipes.util.Testing;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class RecipeApiClient {
     private static final String TAG = "RecipeApiClient";
     private static RecipeApiClient instance;
     private MutableLiveData<List<Recipe>> mRecipes;
-    private RetriveRecipesRunnable mRetrieveRecipesRunnable;
+    private RetrieveRecipesRunnable mRetrieveRecipesRunnable;
 
     public static RecipeApiClient getInstance(){
         if(instance == null){
@@ -45,7 +46,7 @@ public class RecipeApiClient {
         if(mRetrieveRecipesRunnable != null){
             mRetrieveRecipesRunnable = null;
         }
-        mRetrieveRecipesRunnable = new RetriveRecipesRunnable(query, pageNumber);
+        mRetrieveRecipesRunnable = new RetrieveRecipesRunnable(query, pageNumber);
         final Future handler = AppExecutors.getInstance().networkIO().submit(mRetrieveRecipesRunnable);
         AppExecutors.getInstance().networkIO().schedule(new Runnable() {
             @Override
@@ -56,13 +57,14 @@ public class RecipeApiClient {
         }, NETWORK_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 
-    private class RetriveRecipesRunnable implements Runnable{
+
+    private class RetrieveRecipesRunnable implements Runnable{
 
         private String query;
         private int pageNumber;
         boolean cancelRequest;
 
-        public RetriveRecipesRunnable(String query, int pageNumber) {
+        public RetrieveRecipesRunnable(String query, int pageNumber) {
             this.query = query;
             this.pageNumber = pageNumber;
             this.cancelRequest = false;
@@ -79,6 +81,7 @@ public class RecipeApiClient {
                     List<Recipe> list = new ArrayList<>(((RecipeSearchResponse) response.body()).getRecipes());
                     if(pageNumber == 1){
                         mRecipes.postValue(list);
+                        Testing.printRecipes(list);
                     }else {
                         List<Recipe> currentRecipes = mRecipes.getValue();
                         currentRecipes.addAll(list);
@@ -100,9 +103,16 @@ public class RecipeApiClient {
             return ServiceGenerator.getRecipeApi().searchRecipe(query, String.valueOf(pageNumber));
         }
 
-        private void setCancelRequest(){
+        public void setCancelRequest(){
             Log.d(TAG, "setCancelRequest: ");
             cancelRequest = true;
         }
+    }
+
+    public void cancelRequest(){
+        if(mRetrieveRecipesRunnable != null){
+            mRetrieveRecipesRunnable.setCancelRequest();
+        }
+        //TODO: here for single recipe
     }
 }
