@@ -1,7 +1,6 @@
 package com.example.foodrecipes.viewmodels;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.foodrecipes.models.Recipe;
@@ -23,11 +22,15 @@ public class RecipeListViewModel extends ViewModel {
         mIsViewingRecipes = isViewingRecipes;
     }
     public LiveData<List<Recipe>> getmRecipes() {
-        return mRecipeRepository.getRecipe();
+        return mRecipeRepository.getRecipes();
     }
 
     public boolean isViewingRecipes(){
         return mIsViewingRecipes;
+    }
+
+    public LiveData<Boolean> isQueryExhausted(){
+        return mRecipeRepository.isQueryExhausted();
     }
 
     public boolean ismIsPerformingQuery() {
@@ -38,11 +41,16 @@ public class RecipeListViewModel extends ViewModel {
         this.mIsPerformingQuery = mIsPerformingQuery;
     }
 
-    public void searchRecipeApi(String query, int pageNumber)
-    {
+    public void searchRecipeApi(String query, int pageNumber){
         mIsViewingRecipes = true;
         mIsPerformingQuery = true;
         mRecipeRepository.searchRecipeApi(query, pageNumber);
+    }
+
+    public void searchNextPage(){
+        if(!mIsPerformingQuery && mIsViewingRecipes && !isQueryExhausted().getValue()){
+            mRecipeRepository.searchNextPage();
+        }
     }
 
     public boolean onBackPressed(){

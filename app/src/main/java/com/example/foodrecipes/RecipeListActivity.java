@@ -40,6 +40,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         mSearchView = findViewById(R.id.search_view);
         mRecyclerView = findViewById(R.id.recipe_list);
         mRecipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
+
         initRecyclerView();
         subscribeObservers();
         initSearchView();
@@ -48,10 +49,12 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         }
         setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
     }
+
     private void displaySearchCategories(){
         mRecipeListViewModel.setmIsViewingRecipes(false);
         mRecipeRecyclerAdapter.displaySearchCategories();
     }
+
     private void subscribeObservers(){
         mRecipeListViewModel.getmRecipes().observe(this, new Observer<List<Recipe>>() {
             @Override
@@ -66,14 +69,32 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
             }
             }
         });
+        mRecipeListViewModel.isQueryExhausted().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                if(aBoolean) mRecipeRecyclerAdapter.setQueryExhausted();
+            }
+        });
     }
+
     private void initRecyclerView(){
         mRecipeRecyclerAdapter = new RecipeRecyclerAdapter( this);
         mRecyclerView.setAdapter(mRecipeRecyclerAdapter);
         VerticalSpacingItemDecorator itemDecorator = new VerticalSpacingItemDecorator(30);
         mRecyclerView.addItemDecoration(itemDecorator);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Detects if it is not possible to scroll again.
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if(!recyclerView.canScrollVertically(1)){
+                mRecipeListViewModel.searchNextPage();
+                }
+            }
+        });
     }
+
     private void initSearchView(){
         final SearchView searchView = findViewById(R.id.search_view);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -100,7 +121,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
 
     @Override
     public void onRecipeClick(int position) {
-        Intent intent = new Intent(this, RecipeListActivity.class);
+        Intent intent = new Intent(this, MainActivity1221.class);
         intent.putExtra("recipe", mRecipeRecyclerAdapter.getSelectedRecipe(position));
         startActivity(intent);
     }
